@@ -1,0 +1,36 @@
+import mongoose, { Schema, Document } from "mongoose";
+import { IAssignment } from "../types/index.js";
+
+export interface IAssignmentDoc extends Omit<IAssignment, "id">, Document {}
+
+const AssignmentSchema: Schema = new Schema(
+  {
+    due_date: { type: Date, required: true },
+    question_types: { type: [String], required: true },
+    number_of_questions: { type: Number, required: true },
+    total_marks: { type: Number, required: true },
+    additional_instructions: { type: String },
+    reference_text: { type: String },
+    status: {
+      type: String,
+      enum: ["pending", "processing", "completed", "failed"],
+      default: "pending",
+      required: true,
+    },
+    generated_paper_id: { type: Schema.Types.ObjectId, ref: "Result" },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  }
+);
+
+AssignmentSchema.set("toJSON", {
+  transform: (_doc, ret: any) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+});
+
+export const Assignment = mongoose.model<IAssignmentDoc>("Assignment", AssignmentSchema);
