@@ -15,5 +15,6 @@ router.post("/", upload.single("file"), AssignmentController.createAssignment);
 router.get("/", AssignmentController.listAssignments);
 router.get("/:id", AssignmentController.getAssignmentDetails);
 router.post("/:id/regenerate", AssignmentController.regenerateAssignment);
+router.delete("/:id", AssignmentController.deleteAssignment);
 
 export default router;

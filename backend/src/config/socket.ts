@@ -21,16 +21,6 @@ export const initSocket = (server: HttpServer): Server => {
         logger.info(`Socket ${socket.id} joined room: ${assignmentId}`);
         socket.emit("joined", { room: assignmentId });
       }
-
-      // TEST EVENT
-      notifyClient(
-        assignmentId,
-        "job_completed",
-        {
-          success: true,
-          message: "Assignment finished"
-        }
-      );
     });
 
     socket.on("disconnect", () => {

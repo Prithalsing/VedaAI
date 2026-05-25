@@ -1,4 +1,4 @@
-import { ai } from "../config/ai.js";
+import { ai, geminiConfig, isGeminiConfigured } from "../config/ai.js";
 import { logger } from "../utils/logger.js";
 import { z } from "zod";
 export const QuestionZodSchema = z.object({
@@ -17,8 +17,14 @@ export const AssessmentPaperZodSchema = z.object({
 });
 export class AIService {
     static async generateQuestionPaper(input) {
-        logger.info("Starting AI generation with Gemini model...");
-        const { number_of_questions, total_marks, question_types, additional_instructions, reference_text, } = input;
+        logger.info("Starting AI generation...");
+        const { number_of_questions, total_marks, question_types, question_configs, additional_instructions, reference_text, } = input;
+        const normalizedConfigs = question_configs && question_configs.length > 0
+            ? question_configs
+            : buildFallbackConfigs(question_types, number_of_questions, total_marks);
+        const questionConfigPrompt = normalizedConfigs
+            .map((config) => `- ${config.question_type}: ${config.number_of_questions} questions, ${config.marks_per_question} marks each`)
+            .join("\n");
         const prompt = `
 You are an expert academic assessment creator. Your task is to generate a comprehensive, highly professional, and syllabus-aligned question paper based on the requested criteria.
 
@@ -26,6 +32,8 @@ You are an expert academic assessment creator. Your task is to generate a compre
 - **Total Questions to Generate**: ${number_of_questions}
 - **Total Marks for the entire paper**: ${total_marks}
 - **Permitted Question Types**: ${question_types.join(", ")}
+- **Question Type Breakdown**:
+${questionConfigPrompt}
 ${additional_instructions ? `- **Teacher's Additional Instructions**: ${additional_instructions}` : ""}
 ${reference_text ? `- **Reference Material/Syllabus Context**:\n${reference_text}` : "- **Reference Material**: No reference file uploaded."}
 
@@ -33,41 +41,33 @@ ${reference_text ? `- **Reference Material/Syllabus Context**:\n${reference_text
 1. The sum of the "marks" of every single question across all sections MUST sum up EXACTLY to ${total_marks}. Check your arithmetic twice!
 2. The total count of questions across all sections MUST equal EXACTLY ${number_of_questions}.
 3. Distribute questions into logical sections (e.g. Section A, Section B). Group questions in a section by type (e.g. Section A for MCQs, Section B for Short Answer).
-4. Provide a clear, standard exam instruction for each section.
-5. Assign a realistic difficulty level ("Easy", "Moderate", "Hard") to each question.
+4. The number of questions for each question type MUST match the requested breakdown exactly.
+5. The marks assigned to each question of a given type should match the requested marks-per-question unless a strong pedagogical reason requires minor variation.
+6. Every question should be clear, exam-ready, and based on the provided reference material when available.
+7. Provide a clear, standard exam instruction for each section.
+8. Assign a realistic difficulty level ("Easy", "Moderate", "Hard") to each question.
 
 Generate the question paper strictly in the structured format required.
     `;
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey || apiKey === "your_gemini_api_key_here" || apiKey === "") {
-            logger.info("GEMINI_API_KEY is not configured. Generating high-fidelity mock questions.");
+        if (!isGeminiConfigured) {
+            logger.info("Gemini is not configured. Generating high-fidelity mock questions.");
             const sections = [];
-            const questionsPerSection = Math.ceil(number_of_questions / question_types.length);
             let questionIndex = 1;
-            let marksAssigned = 0;
-            for (let sIdx = 0; sIdx < question_types.length; sIdx++) {
-                const qType = question_types[sIdx];
+            for (let sIdx = 0; sIdx < normalizedConfigs.length; sIdx++) {
+                const config = normalizedConfigs[sIdx];
                 const sectionQuestions = [];
-                const qCountForThisSection = Math.min(questionsPerSection, number_of_questions - questionIndex + 1);
-                if (qCountForThisSection <= 0)
-                    break;
-                for (let i = 0; i < qCountForThisSection; i++) {
-                    const isLastQuestion = (questionIndex === number_of_questions);
-                    const qMarks = isLastQuestion
-                        ? (total_marks - marksAssigned)
-                        : Math.max(1, Math.round(total_marks / number_of_questions));
-                    marksAssigned += qMarks;
+                for (let i = 0; i < config.number_of_questions; i++) {
                     sectionQuestions.push({
-                        question_text: `Mock Question ${questionIndex}: Standard practice problem for type '${qType}'.`,
-                        question_type: qType,
+                        question_text: `Mock Question ${questionIndex}: Standard practice problem for type '${config.question_type}'.`,
+                        question_type: config.question_type,
                         difficulty: (i % 3 === 0 ? "Easy" : i % 3 === 1 ? "Moderate" : "Hard"),
-                        marks: qMarks,
+                        marks: config.marks_per_question,
                     });
                     questionIndex++;
                 }
                 sections.push({
-                    section_name: `Section ${String.fromCharCode(65 + sIdx)}: ${qType} Questions`,
-                    instruction: `Attempt all questions in this section. Each question carries marks as indicated.`,
+                    section_name: `Section ${String.fromCharCode(65 + sIdx)}: ${config.question_type}`,
+                    instruction: `Attempt all questions in this section. Each question carries ${config.marks_per_question} marks.`,
                     questions: sectionQuestions,
                 });
             }
@@ -105,7 +105,7 @@ Generate the question paper strictly in the structured format required.
                 required: ["sections"],
             };
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: geminiConfig.model,
                 contents: prompt,
                 config: {
                     responseMimeType: "application/json",
@@ -138,4 +138,17 @@ Generate the question paper strictly in the structured format required.
         }
     }
 }
-// 
+function buildFallbackConfigs(questionTypes, numberOfQuestions, totalMarks) {
+    const questionsPerType = Math.max(1, Math.floor(numberOfQuestions / Math.max(questionTypes.length, 1)));
+    const marksPerQuestion = Math.max(1, Math.round(totalMarks / Math.max(numberOfQuestions, 1)));
+    return questionTypes.map((questionType, index) => {
+        const isLastType = index === questionTypes.length - 1;
+        const usedQuestions = questionsPerType * index;
+        const remainingQuestions = Math.max(numberOfQuestions - usedQuestions, 0);
+        return {
+            question_type: questionType,
+            number_of_questions: isLastType ? remainingQuestions : questionsPerType,
+            marks_per_question: marksPerQuestion,
+        };
+    });
+}

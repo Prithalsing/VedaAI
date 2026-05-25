@@ -4,6 +4,16 @@ const AssignmentSchema = new Schema({
     question_types: { type: [String], required: true },
     number_of_questions: { type: Number, required: true },
     total_marks: { type: Number, required: true },
+    question_configs: {
+        type: [
+            {
+                question_type: { type: String, required: true },
+                number_of_questions: { type: Number, required: true },
+                marks_per_question: { type: Number, required: true },
+            },
+        ],
+        default: undefined,
+    },
     additional_instructions: { type: String },
     reference_text: { type: String },
     status: {

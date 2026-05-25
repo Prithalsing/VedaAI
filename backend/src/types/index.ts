@@ -19,11 +19,18 @@ export interface AssessmentPaper {
 
 export type AssignmentStatus = "pending" | "processing" | "completed" | "failed";
 
+export interface QuestionConfig {
+  question_type: string;
+  number_of_questions: number;
+  marks_per_question: number;
+ }
+
 export interface IAssignmentInput {
   due_date: Date;
   question_types: string[];
   number_of_questions: number;
   total_marks: number;
+  question_configs?: QuestionConfig[];
   additional_instructions?: string;
   reference_text?: string;
 }

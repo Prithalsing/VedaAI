@@ -76,6 +76,7 @@ And configure the values:
 | `REDIS_HOST` | Redis Server IP address | `127.0.0.1` |
 | `REDIS_PORT` | Redis Server port | `6379` |
 | `GEMINI_API_KEY` | Official Google Gemini API Key | *Required* |
+| `GEMINI_MODEL` | Gemini model name used for generation | `gemini-2.5-flash` |
 
 ---
 

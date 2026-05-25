@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 app.use("/api", routes);
-app.all("*", (req, res, next) => {
+app.use((req, res, next) => {
     next(new AppError(`Route ${req.originalUrl} not found`, 404));
 });
 app.use((err, _req, res, _next) => {

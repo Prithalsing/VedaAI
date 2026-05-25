@@ -66,4 +66,16 @@ export class PDFService {
             }
         });
     }
+    static async deleteGeneratedPDF(pdfUrl) {
+        if (!pdfUrl) {
+            return;
+        }
+        const normalizedPath = pdfUrl.replace(/^\/+/, "");
+        const filePath = path.join(__dirname, "../..", normalizedPath);
+        if (!fs.existsSync(filePath)) {
+            return;
+        }
+        await fs.promises.unlink(filePath);
+        logger.info(`Deleted generated PDF: ${filePath}`);
+    }
 }

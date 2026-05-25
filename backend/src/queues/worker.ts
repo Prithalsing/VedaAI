@@ -23,6 +23,7 @@ const processAssessmentJob = async (job: Job<JobData>) => {
     await assignment.save();
 
     notifyClient(assignment_id, "job_status_change", {
+      assignment_id,
       status: "processing",
       message: "Generating assessment questions...",
     });
@@ -32,6 +33,7 @@ const processAssessmentJob = async (job: Job<JobData>) => {
       question_types: assignment.question_types,
       number_of_questions: assignment.number_of_questions,
       total_marks: assignment.total_marks,
+      question_configs: (assignment as any).question_configs,
       additional_instructions: assignment.additional_instructions,
       reference_text: assignment.reference_text,
     });
@@ -54,6 +56,7 @@ const processAssessmentJob = async (job: Job<JobData>) => {
     const finalAssignment = await Assignment.findById(assignment_id).populate("generated_paper_id");
 
     notifyClient(assignment_id, "job_completed", {
+      assignment_id,
       status: "completed",
       message: "Question paper successfully generated!",
       assignment: finalAssignment,
@@ -70,6 +73,7 @@ const processAssessmentJob = async (job: Job<JobData>) => {
     await assignment.save();
 
     notifyClient(assignment_id, "job_failed", {
+      assignment_id,
       status: "failed",
       message: error.message || "Question paper generation failed.",
     });
