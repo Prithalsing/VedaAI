@@ -1,74 +1,167 @@
 # VedaAI AI Assessment Creator
 
-Full-stack AI assessment creator built with Next.js, Express, MongoDB, Redis, BullMQ, and Socket.io.
+An AI-powered assessment generation platform built for teachers to create assignments, trigger background question-paper generation, and review structured outputs in real time.
 
-## Status
+This project is implemented as a full-stack system with:
 
-- Backend setup is ready
-- Frontend setup is ready
-- Assignment creation, list, realtime updates, and output page are wired
-- Remaining work can focus on AI quality and prompt/output refinement
+- `frontend/` - Next.js application
+- `backend/` - Express API, BullMQ worker, WebSocket server
 
-## Stack
+## Overview
 
-- Frontend: Next.js, TypeScript, Tailwind, Zustand, Socket.io client
-- Backend: Node.js, Express, TypeScript, MongoDB, Redis, BullMQ, Socket.io
-- AI: Gemini structured output flow with mock fallback
+The application supports this flow:
 
-## Project Structure
+1. Teacher creates an assignment from the frontend
+2. Backend stores the assignment in MongoDB
+3. BullMQ pushes a generation job to Redis
+4. Worker processes the job asynchronously
+5. AI generates a structured paper response
+6. Result is stored, PDF is generated, and frontend is updated over WebSocket
 
-- `frontend/` - Next.js app
-- `backend/` - Express API, websocket server, BullMQ worker
+If Gemini is not configured, the system falls back to mock structured output so the rest of the product can still be tested.
 
-## Backend Environment
-
-Create `backend/.env` from `backend/.env.example`.
-
-Variables:
-
-- `PORT=5000`
-- `MONGO_URI=mongodb://localhost:27017/veda-ai`
-- `REDIS_HOST=127.0.0.1`
-- `REDIS_PORT=6379`
-- `GEMINI_API_KEY=your_key`
-- `GEMINI_MODEL=gemini-2.5-flash`
-
-If `GEMINI_API_KEY` is not set, the backend still works using mock generated papers.
-
-## Frontend Environment
-
-Create `frontend/.env.local` from `frontend/.env.example`.
-
-Variables:
-
-- `NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api`
-- `NEXT_PUBLIC_SOCKET_URL=http://localhost:5000`
-- `NEXT_PUBLIC_SERVER_URL=http://localhost:5000`
-
-## Local Run
-
-Use two terminals.
-
-### Backend
-
-```bash
-npm --prefix backend install
-npm --prefix backend run dev
-```
+## Tech Stack
 
 ### Frontend
 
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Zustand
+- Socket.io client
+
+### Backend
+
+- Node.js
+- Express
+- TypeScript
+- MongoDB + Mongoose
+- Redis
+- BullMQ
+- Socket.io
+- PDFKit
+- Google Gemini SDK
+
+## Current Features
+
+- Assignment creation form with:
+  - due date
+  - question type breakdown
+  - marks per question
+  - additional instructions
+  - optional PDF or text upload
+- Client-side validation for form input
+- Assignment list view
+- Assignment output view with:
+  - sections
+  - difficulty labels
+  - marks
+  - PDF download link
+- WebSocket-based live generation updates
+- Regenerate assignment flow
+- Delete assignment flow
+- Mock AI fallback when no Gemini key is present
+
+## Project Structure
+
+```text
+VedaAI/
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   ├── queues/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── types/
+│   └── uploads/
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   └── stores/
+└── README.md
+```
+
+## Architecture Summary
+
+### Backend
+
+- `Assignment` documents store teacher input and job status
+- `Result` documents store generated sections and PDF URL
+- BullMQ handles async generation jobs using Redis
+- WebSocket rooms are keyed by assignment ID for live progress updates
+- PDF files are generated under `backend/uploads`
+
+### Frontend
+
+- Zustand stores assignments, selected assignment, UI mode, and job feedback
+- Assignment list, create form, and output view are modularized into separate components
+- The dashboard reacts to WebSocket status updates without requiring manual refresh
+
+## Environment Variables
+
+### Backend
+
+Create `backend/.env` from `backend/.env.example`.
+
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/veda-ai
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Notes:
+
+- `GEMINI_API_KEY` is optional for infrastructure testing
+- without the key, the backend generates mock structured papers
+
+### Frontend
+
+Create `frontend/.env.local` from `frontend/.env.example`.
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+NEXT_PUBLIC_SERVER_URL=http://localhost:5000
+```
+
+## Local Setup
+
+### Prerequisites
+
+- Node.js 18+
+- MongoDB running locally or remotely
+- Redis running locally or in Docker
+
+### Install Dependencies
+
 ```bash
+npm --prefix backend install
 npm --prefix frontend install
+```
+
+### Run Development Servers
+
+Use two terminals.
+
+Backend:
+
+```bash
+npm --prefix backend run dev
+```
+
+Frontend:
+
+```bash
 npm --prefix frontend run dev
 ```
 
-URLs:
-
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:5000/api`
-
-## Root Scripts
+### Root Scripts
 
 From the repo root:
 
@@ -78,18 +171,92 @@ npm run dev:frontend
 npm run build
 ```
 
-## Implemented Flow
+## URLs
 
-1. Load assignments from MongoDB
-2. Open create form
-3. Submit due date, question configs, optional file, and instructions
-4. Queue generation through BullMQ
-5. Receive realtime websocket updates
-6. Open completed generated paper and download PDF
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5000/api`
+- Generated PDFs: `http://localhost:5000/uploads/<file>.pdf`
 
-## Notes
+## How To Test
 
-- MongoDB and Redis must be running before backend startup
-- Generated PDFs are served from `backend/uploads`
-- Frontend already uses Zustand and Socket.io as required
-- The main remaining area is AI generation quality
+### 1. Infrastructure Test
+
+- Start MongoDB
+- Start Redis
+- Start backend
+- Start frontend
+- Create a new assignment from the UI
+
+Expected:
+
+- assignment saved in MongoDB
+- BullMQ job added to Redis
+- worker processes the job
+- frontend receives real-time status updates
+- output page becomes available
+
+### 2. Redis / Queue Verification
+
+If Redis is running in Docker:
+
+```bash
+docker exec -it <redis-container-name> redis-cli
+```
+
+Then:
+
+```redis
+PING
+KEYS bull:*
+XRANGE bull:assessment-generation:events - + COUNT 20
+```
+
+This confirms BullMQ events such as:
+
+- `added`
+- `waiting`
+- `active`
+- `completed`
+
+### 3. AI Test
+
+To test real Gemini generation:
+
+1. add a valid `GEMINI_API_KEY` in `backend/.env`
+2. restart backend
+3. submit a new assignment from the frontend
+
+If no key is provided, mock generation is used instead.
+
+## Sample Upload File
+
+A sample text file for upload testing is available at:
+
+- [backend/uploads/sample-reference-material.txt](backend/uploads/sample-reference-material.txt)
+
+Use it to verify:
+
+- optional file upload
+- backend text extraction
+- prompt enrichment using uploaded content
+
+## Important Notes
+
+- BullMQ completed jobs are currently removed from Redis after success by queue config
+- generated PDFs are deleted when the related assignment is deleted
+- frontend and backend builds currently pass
+
+## Current Gaps / Next Work
+
+- improve real Gemini prompt quality and output consistency
+- improve PDF formatting to more closely match production exam layouts
+- add better queue observability or admin dashboard if needed
+- add automated tests where required
+
+## Build Status
+
+Verified successfully:
+
+- `npm --prefix backend run build`
+- `npm --prefix frontend run build`
+- `npm run build`
