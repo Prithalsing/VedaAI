@@ -3,6 +3,7 @@ import { redisConfig } from "../config/redis.js";
 import { Assignment } from "../models/assignment.model.js";
 import { Result } from "../models/result.model.js";
 import { AIService } from "../services/ai.service.js";
+import { CacheService } from "../services/cache.service.js";
 import { PDFService } from "../services/pdf.service.js";
 import { notifyClient } from "../config/socket.js";
 import { logger } from "../utils/logger.js";
@@ -17,6 +18,7 @@ const processAssessmentJob = async (job) => {
     try {
         assignment.status = "processing";
         await assignment.save();
+        await CacheService.invalidateAssignmentCaches(assignment_id);
         notifyClient(assignment_id, "job_status_change", {
             assignment_id,
             status: "processing",
@@ -42,6 +44,7 @@ const processAssessmentJob = async (job) => {
         assignment.status = "completed";
         assignment.generated_paper_id = resultDoc._id;
         await assignment.save();
+        await CacheService.invalidateAssignmentCaches(assignment_id);
         const finalAssignment = await Assignment.findById(assignment_id).populate("generated_paper_id");
         notifyClient(assignment_id, "job_completed", {
             assignment_id,
@@ -57,6 +60,7 @@ const processAssessmentJob = async (job) => {
         logger.error(`Failed job for Assignment: ${assignment_id}`, error);
         assignment.status = "failed";
         await assignment.save();
+        await CacheService.invalidateAssignmentCaches(assignment_id);
         notifyClient(assignment_id, "job_failed", {
             assignment_id,
             status: "failed",

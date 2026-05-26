@@ -21,6 +21,7 @@ const AssignmentSchema: Schema = new Schema(
     },
     additional_instructions: { type: String },
     reference_text: { type: String },
+    assignment_title: { type: String },
     status: {
       type: String,
       enum: ["pending", "processing", "completed", "failed"],

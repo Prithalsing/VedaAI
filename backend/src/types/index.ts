@@ -5,6 +5,8 @@ export interface Question {
   question_type: string; // e.g. "MCQ", "Short Answer", "Long Answer", "True/False"
   difficulty: Difficulty;
   marks: number;
+  options?: string[];
+  correct_answer?: string;
 }
 
 export interface Section {
@@ -33,6 +35,7 @@ export interface IAssignmentInput {
   question_configs?: QuestionConfig[];
   additional_instructions?: string;
   reference_text?: string;
+  assignment_title?: string;
 }
 
 export interface IAssignment extends IAssignmentInput {

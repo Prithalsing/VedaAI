@@ -11,6 +11,8 @@ export type Question = {
   question_type: string;
   difficulty: Difficulty;
   marks: number;
+  options?: string[];
+  correct_answer?: string;
 };
 
 export type Section = {
@@ -39,6 +41,7 @@ export type Assignment = {
   question_configs?: QuestionConfig[];
   additional_instructions?: string;
   reference_text?: string;
+  assignment_title?: string;
   status: AssignmentStatus;
   generated_paper_id?: GeneratedPaper | string;
   created_at: string;
@@ -48,7 +51,8 @@ export type Assignment = {
 export type CreateAssignmentInput = {
   dueDate: string;
   questionConfigs: QuestionConfig[];
-  additionalInstructions: string;
+  additionalInstructions?: string;
+  assignmentTitle?: string;
   file?: File | null;
 };
 

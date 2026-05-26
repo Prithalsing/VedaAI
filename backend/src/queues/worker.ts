@@ -3,6 +3,7 @@ import { redisConfig } from "../config/redis.js";
 import { Assignment } from "../models/assignment.model.js";
 import { Result } from "../models/result.model.js";
 import { AIService } from "../services/ai.service.js";
+import { CacheService } from "../services/cache.service.js";
 import { PDFService } from "../services/pdf.service.js";
 import { notifyClient } from "../config/socket.js";
 import { logger } from "../utils/logger.js";
@@ -21,6 +22,7 @@ const processAssessmentJob = async (job: Job<JobData>) => {
   try {
     assignment.status = "processing";
     await assignment.save();
+    await CacheService.invalidateAssignmentCaches(assignment_id);
 
     notifyClient(assignment_id, "job_status_change", {
       assignment_id,
@@ -52,6 +54,7 @@ const processAssessmentJob = async (job: Job<JobData>) => {
     assignment.status = "completed";
     assignment.generated_paper_id = resultDoc._id as any;
     await assignment.save();
+    await CacheService.invalidateAssignmentCaches(assignment_id);
 
     const finalAssignment = await Assignment.findById(assignment_id).populate("generated_paper_id");
 
@@ -59,24 +62,37 @@ const processAssessmentJob = async (job: Job<JobData>) => {
       assignment_id,
       status: "completed",
       message: "Question paper successfully generated!",
-      assignment: finalAssignment,
-      result: resultDoc,
     });
 
     logger.info(`Successfully completed job for Assignment: ${assignment_id}`);
     return { success: true };
 
   } catch (error: any) {
-    logger.error(`Failed job for Assignment: ${assignment_id}`, error);
+    const attemptsLimit = job.opts.attempts || 1;
+    const isFinalAttempt = (job.attemptsMade + 1) >= attemptsLimit;
 
-    assignment.status = "failed";
-    await assignment.save();
+    logger.error(
+      `Failed job attempt for Assignment: ${assignment_id} (Attempt ${job.attemptsMade + 1} of ${attemptsLimit})`,
+      error
+    );
 
-    notifyClient(assignment_id, "job_failed", {
-      assignment_id,
-      status: "failed",
-      message: error.message || "Question paper generation failed.",
-    });
+    if (isFinalAttempt) {
+      assignment.status = "failed";
+      await assignment.save();
+      await CacheService.invalidateAssignmentCaches(assignment_id);
+
+      notifyClient(assignment_id, "job_failed", {
+        assignment_id,
+        status: "failed",
+        message: error.message || "Question paper generation failed after maximum attempts.",
+      });
+    } else {
+      notifyClient(assignment_id, "job_status_change", {
+        assignment_id,
+        status: "processing",
+        message: `Generation attempt failed. Retrying shortly... (Attempt ${job.attemptsMade + 2} of ${attemptsLimit})`,
+      });
+    }
 
     throw error;
   }
@@ -87,6 +103,7 @@ export const startWorker = (): Worker => {
   
   const worker = new Worker("assessment-generation", processAssessmentJob, {
     connection: redisConfig,
+    lockDuration: 60000,
   });
 
   worker.on("ready", () => {

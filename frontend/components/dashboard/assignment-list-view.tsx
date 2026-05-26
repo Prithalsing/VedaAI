@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Eye, MoreVertical, Search, Trash2 } from "lucide-react";
 import { Assignment } from "@/lib/assignment-types";
 import { CreateAssignmentButton } from "./create-assignment-button";
@@ -23,6 +23,18 @@ export function AssignmentListView({
   onDeleteAssignment,
 }: AssignmentListViewProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredAssignments = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return assignments;
+    return assignments.filter((a) => {
+      const title = buildAssignmentTitle(a).toLowerCase();
+      const subtitle = buildAssignmentSubtitle(a).toLowerCase();
+      const status = a.status.toLowerCase();
+      return title.includes(query) || subtitle.includes(query) || status.includes(query);
+    });
+  }, [assignments, searchQuery]);
 
   return (
     <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,#ffffff_0%,#f7f5f2_45%,#efebe5_100%)]">
@@ -48,6 +60,8 @@ export function AssignmentListView({
               <input
                 type="text"
                 placeholder="Search Assignment"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-10 w-full rounded-full border border-slate-200 bg-white pl-9 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
               />
             </label>
@@ -57,7 +71,7 @@ export function AssignmentListView({
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-24 pt-3 sm:px-4 sm:pb-28">
         <div className="grid gap-3 xl:grid-cols-2">
-          {assignments.map((assignment) => {
+          {filteredAssignments.map((assignment) => {
             const active = assignment.id === selectedAssignmentId;
             const menuOpen = assignment.id === openMenuId;
 
@@ -82,6 +96,7 @@ export function AssignmentListView({
                   active
                     ? "border-slate-900/20 ring-2 ring-slate-900/10"
                     : "border-slate-200/80",
+                  menuOpen ? "z-30" : "z-10",
                 ].join(" ")}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -182,6 +197,10 @@ function StatusBadge({ status }: { status: Assignment["status"] }) {
 }
 
 function buildAssignmentTitle(assignment: Assignment): string {
+  if (assignment.assignment_title) {
+    return assignment.assignment_title;
+  }
+
   if (assignment.question_configs?.[0]?.question_type) {
     return `${assignment.question_configs[0].question_type} Assessment`;
   }

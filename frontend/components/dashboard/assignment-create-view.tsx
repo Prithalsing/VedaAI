@@ -38,6 +38,7 @@ export function AssignmentCreateView({
   submitting,
 }: AssignmentCreateViewProps) {
   const [dueDate, setDueDate] = useState("");
+  const [assignmentTitle, setAssignmentTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [questionConfigs, setQuestionConfigs] = useState<QuestionConfig[]>([
     {
@@ -101,12 +102,12 @@ export function AssignmentCreateView({
       current.map((config, currentIndex) =>
         currentIndex === index
           ? {
-              ...config,
-              [field]:
-                field === "question_type"
-                  ? value
-                  : Math.max(1, Number(value) || 1),
-            }
+            ...config,
+            [field]:
+              field === "question_type"
+                ? value
+                : Math.max(1, Number(value) || 1),
+          }
           : config,
       ),
     );
@@ -142,6 +143,7 @@ export function AssignmentCreateView({
       dueDate,
       questionConfigs,
       additionalInstructions,
+      assignmentTitle,
       file,
     });
   };
@@ -173,19 +175,52 @@ export function AssignmentCreateView({
             </p>
           </div>
 
-          <label className="mt-5 block rounded-[24px] border border-dashed border-slate-300 bg-slate-50/80 px-4 py-8 text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm">
-              <CloudUpload className="h-4.5 w-4.5" />
+          <div className="mt-5">
+            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Assignment Title (Optional)
+            </label>
+            <div className="relative mt-2">
+              <input
+                type="text"
+                placeholder="e.g. Midterm Physics Assessment"
+                value={assignmentTitle}
+                onChange={(event) => setAssignmentTitle(event.target.value)}
+                className="h-11 w-full rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+              />
             </div>
-            <p className="mt-4 text-sm font-medium text-slate-700">
-              Choose a file or drag & drop it here
-            </p>
-            <p className="mt-1 text-xs text-slate-400">
-              PDF or text file, up to 10MB
-            </p>
-            <div className="mt-4 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm">
-              Browse Files
-            </div>
+          </div>
+
+
+
+          <label className="mt-5 block cursor-pointer rounded-[24px] border border-dashed border-slate-300 bg-slate-50/80 px-4 py-8 text-center transition hover:bg-slate-100/50">
+            {!file ? (
+              <>
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm">
+                  <CloudUpload className="h-4.5 w-4.5" />
+                </div>
+                <p className="mt-4 text-sm font-medium text-slate-700">
+                  Choose a file or drag & drop it here
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  PDF or text file, up to 10MB
+                </p>
+                <div className="mt-4 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+                  Browse Files
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100">
+                  <CloudUpload className="h-4.5 w-4.5" />
+                </div>
+                <p className="mt-4 text-sm font-medium text-emerald-700">
+                  {file.name}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Click to replace file
+                </p>
+              </div>
+            )}
             <input
               type="file"
               accept=".pdf,.txt,text/plain,application/pdf"
@@ -194,14 +229,9 @@ export function AssignmentCreateView({
             />
           </label>
 
-          <p className="mt-3 text-center text-xs text-slate-400">
-            {file ? `${file.name} selected` : "Upload reference text or a syllabus PDF"}
-          </p>
           {errors.file ? (
             <p className="mt-2 text-sm text-rose-600">{errors.file}</p>
-          ) : null}
-
-          <div className="mt-5">
+          ) : null}          <div className="mt-5">
             <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
               Due Date
             </label>
@@ -212,7 +242,6 @@ export function AssignmentCreateView({
                 onChange={(event) => setDueDate(event.target.value)}
                 className="h-11 w-full rounded-full border border-slate-200 bg-white px-4 pr-11 text-sm text-slate-700 outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
               />
-              <Calendar className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
             {errors.dueDate ? (
               <p className="mt-2 text-sm text-rose-600">{errors.dueDate}</p>

@@ -4,6 +4,7 @@ const parsePDF = pdfParse.default || pdfParse;
 import { Assignment } from "../models/assignment.model.js";
 import { Result } from "../models/result.model.js";
 import { assessmentQueue } from "../queues/queue.js";
+import { assignmentCacheKeys, CacheService } from "../services/cache.service.js";
 import { PDFService } from "../services/pdf.service.js";
 import { AppError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
@@ -102,6 +103,7 @@ export class AssignmentController {
             });
             await newAssignment.save();
             logger.info(`Assignment created in database with ID: ${newAssignment._id}`);
+            await CacheService.invalidateAssignmentCaches();
             const job = await assessmentQueue.add(`generate-${newAssignment._id}`, {
                 assignment_id: newAssignment._id.toString(),
             });
@@ -118,16 +120,23 @@ export class AssignmentController {
     }
     static async getAssignmentDetails(req, res, next) {
         try {
-            const { id } = req.params;
+            const id = getParamValue(req.params.id);
             logger.info(`Fetching details for Assignment: ${id}`);
+            const cachedPayload = await CacheService.getJson(assignmentCacheKeys.detail(id));
+            if (cachedPayload) {
+                res.status(200).json(cachedPayload);
+                return;
+            }
             const assignment = await Assignment.findById(id).populate("generated_paper_id");
             if (!assignment) {
                 throw new AppError(`Assignment with ID ${id} not found.`, 404);
             }
-            res.status(200).json({
+            const payload = {
                 success: true,
                 assignment,
-            });
+            };
+            await CacheService.setJson(assignmentCacheKeys.detail(id), payload);
+            res.status(200).json(payload);
         }
         catch (error) {
             next(error);
@@ -136,12 +145,19 @@ export class AssignmentController {
     static async listAssignments(_req, res, next) {
         try {
             logger.info("Listing all assignments");
+            const cachedPayload = await CacheService.getJson(assignmentCacheKeys.list);
+            if (cachedPayload) {
+                res.status(200).json(cachedPayload);
+                return;
+            }
             const assignments = await Assignment.find().sort({ created_at: -1 }).populate("generated_paper_id");
-            res.status(200).json({
+            const payload = {
                 success: true,
                 count: assignments.length,
                 assignments,
-            });
+            };
+            await CacheService.setJson(assignmentCacheKeys.list, payload);
+            res.status(200).json(payload);
         }
         catch (error) {
             next(error);
@@ -149,7 +165,7 @@ export class AssignmentController {
     }
     static async regenerateAssignment(req, res, next) {
         try {
-            const { id } = req.params;
+            const id = getParamValue(req.params.id);
             logger.info(`Request received to regenerate Assignment: ${id}`);
             const assignment = await Assignment.findById(id);
             if (!assignment) {
@@ -165,6 +181,7 @@ export class AssignmentController {
             }
             assignment.status = "pending";
             await assignment.save();
+            await CacheService.invalidateAssignmentCaches(id);
             const job = await assessmentQueue.add(`regenerate-${assignment._id}`, {
                 assignment_id: assignment._id.toString(),
             });
@@ -181,7 +198,7 @@ export class AssignmentController {
     }
     static async deleteAssignment(req, res, next) {
         try {
-            const { id } = req.params;
+            const id = getParamValue(req.params.id);
             logger.info(`Request received to delete Assignment: ${id}`);
             const assignment = await Assignment.findById(id);
             if (!assignment) {
@@ -195,6 +212,7 @@ export class AssignmentController {
                 await Result.findByIdAndDelete(assignment.generated_paper_id);
             }
             await Assignment.findByIdAndDelete(id);
+            await CacheService.invalidateAssignmentCaches(id);
             res.status(200).json({
                 success: true,
                 message: "Assignment deleted successfully.",
@@ -204,4 +222,10 @@ export class AssignmentController {
             next(error);
         }
     }
+}
+function getParamValue(value) {
+    if (!value) {
+        throw new AppError("Required route parameter is missing.", 400);
+    }
+    return Array.isArray(value) ? value[0] : value;
 }

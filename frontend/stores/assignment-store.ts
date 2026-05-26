@@ -4,6 +4,7 @@ import { create } from "zustand";
 import {
   createAssignment as createAssignmentRequest,
   deleteAssignment as deleteAssignmentRequest,
+  fetchAssignment as fetchAssignmentRequest,
   fetchAssignments as fetchAssignmentsRequest,
   regenerateAssignment as regenerateAssignmentRequest,
 } from "@/lib/assignment-api";
@@ -32,7 +33,7 @@ type AssignmentStore = {
   createAssignment: (input: CreateAssignmentInput) => Promise<void>;
   regenerateAssignment: (assignmentId: string) => Promise<void>;
   deleteAssignment: (assignmentId: string) => Promise<void>;
-  applySocketEvent: (event: SocketJobEvent) => void;
+  applySocketEvent: (event: SocketJobEvent) => Promise<void>;
   setSocketConnected: (connected: boolean) => void;
   clearToast: () => void;
 };
@@ -178,7 +179,23 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     }
   },
 
-  applySocketEvent: (event) => {
+  applySocketEvent: async (event) => {
+    if (event.status === "completed") {
+      try {
+        const fullAssignment = await fetchAssignmentRequest(event.assignment_id);
+        set((state) => {
+          const nextAssignments = mergeAssignment(state.assignments, fullAssignment);
+          return {
+            assignments: nextAssignments,
+            toastMessage: event.message,
+          } as AssignmentStore;
+        });
+      } catch (err) {
+        console.error("Failed to fetch completed assignment details:", err);
+      }
+      return;
+    }
+
     set((state) => {
       const nextAssignments = state.assignments.map((assignment) => {
         if (assignment.id !== event.assignment_id) {
@@ -195,21 +212,10 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         };
       });
 
-      const matchedAssignment = nextAssignments.find(
-        (assignment) => assignment.id === event.assignment_id,
-      );
-
-      const nextState: Partial<AssignmentStore> = {
+      return {
         assignments: sortAssignments(nextAssignments),
         toastMessage: event.message,
-      };
-
-      if (event.status === "completed" && matchedAssignment) {
-        nextState.selectedAssignmentId = matchedAssignment.id;
-        nextState.viewMode = "output";
-      }
-
-      return nextState as AssignmentStore;
+      } as AssignmentStore;
     });
   },
 

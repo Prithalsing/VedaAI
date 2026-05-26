@@ -91,19 +91,23 @@ export function AssignmentOutputView({
               All questions are compulsory unless stated otherwise.
             </p>
 
-            <div className="mt-6 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-              <p>
-                <span className="font-medium">Name:</span> __________________
-              </p>
-              <p>
-                <span className="font-medium">Roll Number:</span> __________________
-              </p>
-              <p>
-                <span className="font-medium">Class:</span> __________________
-              </p>
-              <p>
-                <span className="font-medium">Section:</span> __________________
-              </p>
+            <div className="mt-6 grid gap-x-8 gap-y-4 text-sm text-slate-700 sm:grid-cols-2">
+              <div className="flex items-end gap-2">
+                <span className="font-medium whitespace-nowrap">Name:</span>
+                <div className="flex-1 border-b border-slate-400"></div>
+              </div>
+              <div className="flex items-end gap-2">
+                <span className="font-medium whitespace-nowrap">Roll Number:</span>
+                <div className="flex-1 border-b border-slate-400"></div>
+              </div>
+              <div className="flex items-end gap-2">
+                <span className="font-medium whitespace-nowrap">Class:</span>
+                <div className="flex-1 border-b border-slate-400"></div>
+              </div>
+              <div className="flex items-end gap-2">
+                <span className="font-medium whitespace-nowrap">Section:</span>
+                <div className="flex-1 border-b border-slate-400"></div>
+              </div>
             </div>
 
             <div className="mt-8 space-y-10">
@@ -123,12 +127,41 @@ export function AssignmentOutputView({
                       <FileText className="h-4 w-4" />
                       Questions
                     </div>
-                    <ol className="mt-4 space-y-5 pl-5 text-sm leading-7 text-slate-700">
+                    <ol className="mt-4 space-y-6 pl-5 text-sm leading-7 text-slate-700">
                       {section.questions.map((question, index) => (
-                        <li key={`${section.section_name}-${index}`}>
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <p className="pr-3">{question.question_text}</p>
-                            <div className="flex shrink-0 items-center gap-2">
+                        <li key={`${section.section_name}-${index}`} className="list-decimal">
+                          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex-1">
+                              <p className="pr-3 font-medium text-slate-800">{question.question_text}</p>
+                              {question.options && question.options.length > 0 && (
+                                <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                  {question.options.map((opt, idx) => {
+                                    const prefix = ["A", "B", "C", "D", "E", "F"][idx] || `${idx + 1}`;
+                                    const isCorrect = question.correct_answer === prefix || question.correct_answer === opt;
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className={`flex items-center gap-3 rounded-2xl border p-2.5 px-4 text-xs transition-all duration-200 ${isCorrect
+                                            ? "border-emerald-200 bg-emerald-50/70 text-emerald-800 shadow-[0_2px_8px_rgba(16,185,129,0.06)]"
+                                            : "border-slate-100 bg-slate-50/50 text-slate-600 hover:border-slate-200"
+                                          }`}
+                                      >
+                                        <span
+                                          className={`inline-flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${isCorrect
+                                              ? "bg-emerald-500 text-white"
+                                              : "bg-slate-200 text-slate-700"
+                                            }`}
+                                        >
+                                          {prefix}
+                                        </span>
+                                        <span className="font-medium">{opt}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2 self-start sm:mt-0.5">
                               <DifficultyBadge
                                 difficulty={question.difficulty}
                               />
@@ -168,6 +201,10 @@ function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
 }
 
 function buildAssignmentTitle(assignment: Assignment): string {
+  if (assignment.assignment_title) {
+    return assignment.assignment_title;
+  }
+
   if (assignment.question_configs?.[0]?.question_type) {
     return `${assignment.question_configs[0].question_type} Assessment`;
   }

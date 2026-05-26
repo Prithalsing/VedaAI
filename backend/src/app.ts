@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import routes from "./routes/index.js";
 import { AppError } from "./utils/errors.js";
+import { requireAuth } from "./middleware/auth.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-app.use("/api", routes);
+app.use("/api", requireAuth, routes);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404));

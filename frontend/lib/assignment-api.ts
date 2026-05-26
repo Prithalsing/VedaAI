@@ -25,7 +25,13 @@ type MessageResponse = {
 };
 
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${input}`, init);
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", "Bearer veda-ai-secure-secret-token-2024");
+
+  const response = await fetch(`${API_BASE_URL}${input}`, {
+    ...init,
+    headers,
+  });
   const payload = await response.json();
 
   if (!response.ok) {
@@ -46,10 +52,12 @@ export async function createAssignment(
   const formData = new FormData();
   formData.append("due_date", input.dueDate);
   formData.append("question_configs", JSON.stringify(input.questionConfigs));
-  formData.append(
-    "additional_instructions",
-    input.additionalInstructions.trim(),
-  );
+  if (input.additionalInstructions) {
+    formData.append("additional_instructions", input.additionalInstructions);
+  }
+  if (input.assignmentTitle) {
+    formData.append("assignment_title", input.assignmentTitle);
+  }
 
   if (input.file) {
     formData.append("file", input.file);
