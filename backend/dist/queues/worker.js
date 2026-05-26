@@ -50,22 +50,31 @@ const processAssessmentJob = async (job) => {
             assignment_id,
             status: "completed",
             message: "Question paper successfully generated!",
-            assignment: finalAssignment,
-            result: resultDoc,
         });
         logger.info(`Successfully completed job for Assignment: ${assignment_id}`);
         return { success: true };
     }
     catch (error) {
-        logger.error(`Failed job for Assignment: ${assignment_id}`, error);
-        assignment.status = "failed";
-        await assignment.save();
-        await CacheService.invalidateAssignmentCaches(assignment_id);
-        notifyClient(assignment_id, "job_failed", {
-            assignment_id,
-            status: "failed",
-            message: error.message || "Question paper generation failed.",
-        });
+        const attemptsLimit = job.opts.attempts || 1;
+        const isFinalAttempt = (job.attemptsMade + 1) >= attemptsLimit;
+        logger.error(`Failed job attempt for Assignment: ${assignment_id} (Attempt ${job.attemptsMade + 1} of ${attemptsLimit})`, error);
+        if (isFinalAttempt) {
+            assignment.status = "failed";
+            await assignment.save();
+            await CacheService.invalidateAssignmentCaches(assignment_id);
+            notifyClient(assignment_id, "job_failed", {
+                assignment_id,
+                status: "failed",
+                message: error.message || "Question paper generation failed after maximum attempts.",
+            });
+        }
+        else {
+            notifyClient(assignment_id, "job_status_change", {
+                assignment_id,
+                status: "processing",
+                message: `Generation attempt failed. Retrying shortly... (Attempt ${job.attemptsMade + 2} of ${attemptsLimit})`,
+            });
+        }
         throw error;
     }
 };
@@ -73,6 +82,7 @@ export const startWorker = () => {
     logger.info("Starting background queue worker...");
     const worker = new Worker("assessment-generation", processAssessmentJob, {
         connection: redisConfig,
+        lockDuration: 60000,
     });
     worker.on("ready", () => {
         logger.info("Queue Worker is connected and listening for jobs");

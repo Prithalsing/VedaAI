@@ -12,7 +12,7 @@ export class AssignmentController {
     static async createAssignment(req, res, next) {
         try {
             logger.info("Received request to create assignment");
-            const { due_date, question_types, question_configs, number_of_questions, total_marks, additional_instructions, } = req.body;
+            const { due_date, question_types, question_configs, number_of_questions, total_marks, additional_instructions, assignment_title, } = req.body;
             if (!due_date) {
                 throw new AppError("Due date is required.", 400);
             }
@@ -98,6 +98,7 @@ export class AssignmentController {
                 total_marks: tMarks,
                 question_configs: normalizedConfigs,
                 additional_instructions,
+                assignment_title: assignment_title || undefined,
                 reference_text: referenceText || undefined,
                 status: "pending",
             });

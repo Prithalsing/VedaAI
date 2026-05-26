@@ -16,12 +16,17 @@ async function getCacheClient() {
     if (cacheClientConnectPromise) {
         return cacheClientConnectPromise;
     }
-    cacheClient = createClient({
-        socket: {
-            host: redisConfig.host,
-            port: redisConfig.port,
-        },
-    });
+    cacheClient = redisConfig.url
+        ? createClient({ url: redisConfig.url })
+        : createClient({
+            username: redisConfig.username,
+            password: redisConfig.password,
+            socket: {
+                host: redisConfig.host,
+                port: redisConfig.port,
+                tls: redisConfig.tls ? true : undefined,
+            },
+        });
     cacheClient.on("error", (error) => {
         logger.warn(`Redis cache client error: ${error}`);
     });

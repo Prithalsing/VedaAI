@@ -46,7 +46,18 @@ export class PDFService {
                         const questionLine = `Q${questionCounter}. ${q.question_text}`;
                         const metaInfo = ` [Marks: ${q.marks}] (${q.difficulty})`;
                         doc.text(questionLine + metaInfo);
-                        doc.moveDown(0.5);
+                        if (q.options && q.options.length > 0) {
+                            doc.moveDown(0.2);
+                            const prefixes = ["A", "B", "C", "D", "E", "F"];
+                            q.options.forEach((opt, idx) => {
+                                const prefix = prefixes[idx] || `${idx + 1}`;
+                                doc.fontSize(9.5).text(`    ${prefix}. ${opt}`);
+                            });
+                            doc.moveDown(0.5);
+                        }
+                        else {
+                            doc.moveDown(0.5);
+                        }
                         questionCounter++;
                     });
                 });

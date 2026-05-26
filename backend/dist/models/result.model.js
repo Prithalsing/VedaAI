@@ -4,6 +4,8 @@ const QuestionSchema = new Schema({
     question_type: { type: String, required: true },
     difficulty: { type: String, enum: ["Easy", "Moderate", "Hard"], required: true },
     marks: { type: Number, required: true },
+    options: { type: [String], default: undefined },
+    correct_answer: { type: String },
 });
 const SectionSchema = new Schema({
     section_name: { type: String, required: true },
