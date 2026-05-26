@@ -4,10 +4,8 @@ import {
   GeneratedPaper,
 } from "./assignment-types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
-const SERVER_BASE_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const SERVER_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
 type AssignmentsResponse = {
   success: boolean;
@@ -110,7 +108,7 @@ export function getGeneratedPaper(
 }
 
 export function getSocketUrl(): string {
-  return process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+  return process.env.NEXT_PUBLIC_SOCKET_URL || "";
 }
 
 export function getServerBaseUrl(): string {
