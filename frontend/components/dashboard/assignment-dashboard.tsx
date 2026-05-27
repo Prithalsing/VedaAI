@@ -118,11 +118,11 @@ export function AssignmentDashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f6f1e9_0%,#ece8e2_45%,#d8d3cc_100%)] text-slate-900">
-      <div className="flex min-h-screen w-full gap-4 border border-white/60 bg-white/35 p-3 shadow-[0_32px_90px_rgba(15,23,42,0.14)] backdrop-blur sm:p-4 lg:gap-5">
+    <main className="h-screen max-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#f6f1e9_0%,#ece8e2_45%,#d8d3cc_100%)] text-slate-900 flex flex-col">
+      <div className="flex h-full min-h-0 w-full gap-4 border border-white/60 bg-white/35 p-3 pb-[145px] shadow-[0_32px_90px_rgba(15,23,42,0.14)] backdrop-blur sm:p-4 sm:pb-[155px] lg:p-4 lg:pb-4 lg:gap-5 overflow-hidden">
         <DashboardSidebar onCreateAssignment={openCreate} />
 
-        <div className="relative flex min-w-0 flex-1 flex-col rounded-[28px] bg-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur">
+        <div className="relative flex min-w-0 min-h-0 flex-1 flex-col rounded-[28px] bg-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur">
           <header className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button

@@ -8,7 +8,7 @@ export function DashboardEmptyState({
   onCreateAssignment,
 }: DashboardEmptyStateProps) {
   return (
-    <section className="relative flex flex-1 flex-col overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,#ffffff_0%,#f7f5f2_40%,#efebe5_100%)] px-4 py-10 sm:px-8 sm:py-12 lg:px-12 lg:py-16">
+    <section className="relative flex flex-1 flex-col overflow-y-auto rounded-[28px] bg-[radial-gradient(circle_at_top,#ffffff_0%,#f7f5f2_40%,#efebe5_100%)] px-4 py-10 sm:px-8 sm:py-12 lg:px-12 lg:py-16">
       <div className="pointer-events-none absolute left-8 top-10 h-32 w-32 rounded-full bg-orange-200/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-8 right-8 h-40 w-40 rounded-full bg-sky-200/35 blur-3xl" />
 

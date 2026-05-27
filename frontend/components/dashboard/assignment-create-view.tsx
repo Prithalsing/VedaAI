@@ -164,7 +164,7 @@ export function AssignmentCreateView({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-24 sm:px-6 sm:pb-28">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-36 sm:px-6 sm:pb-40">
         <div className="mx-auto max-w-4xl rounded-[30px] border border-white/70 bg-white/70 p-4 shadow-[0_24px_80px_rgba(148,163,184,0.16)] backdrop-blur sm:p-6">
           <div>
             <h3 className="text-base font-semibold text-slate-900">

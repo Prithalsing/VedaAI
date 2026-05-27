@@ -32,7 +32,7 @@ export function AssignmentOutputView({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,#ffffff_0%,#f7f5f2_45%,#efebe5_100%)]">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-20 sm:px-6 sm:pb-24">
         <div className="w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(148,163,184,0.16)]">
           <div className="bg-slate-950 px-5 py-4 text-white">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
