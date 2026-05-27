@@ -125,21 +125,25 @@ export function AssignmentDashboard() {
         <div className="relative flex min-w-0 min-h-0 flex-1 flex-col rounded-[28px] bg-white/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur">
           <header className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm lg:hidden"
-                aria-label="Open navigation"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                className="hidden h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm lg:inline-flex"
-                onClick={handleBack}
-                aria-label="Back to assignments"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
+              {(viewMode === "list" || viewMode === "empty") && (
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm lg:hidden"
+                  aria-label="Open navigation"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              )}
+              {(viewMode === "create" || viewMode === "output") && (
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm"
+                  onClick={handleBack}
+                  aria-label="Back to assignments"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              )}
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">
                   Dashboard
