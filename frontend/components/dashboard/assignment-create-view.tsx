@@ -325,24 +325,24 @@ export function AssignmentCreateView({
               />
             </div>
           </div>
-        </div>
 
-        <div className="mx-auto mt-5 flex max-w-4xl items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={submitting}
-            className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Submitting..." : "Generate Assignment"}
-          </button>
+          <div className="mt-8 flex items-center justify-between gap-3 border-t border-slate-200/80 pt-5">
+            <button
+              type="button"
+              onClick={onBack}
+              className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={submitting}
+              className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? "Submitting..." : "Generate Assignment"}
+            </button>
+          </div>
         </div>
       </div>
     </section>
