@@ -24,17 +24,17 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
   try {
     const { path } = await context.params;
     const pathString = path.join("/");
-    
+
     // Resolve the real backend API endpoint.
     const backendBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
-    
+
     const url = new URL(request.url);
     const searchParams = url.search;
-    
+
     const targetUrl = `${backendBaseUrl}/${pathString}${searchParams}`;
 
     const headers = new Headers();
-    
+
     // Forward incoming headers while avoiding conflicting host/authorization headers
     request.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
@@ -50,7 +50,7 @@ async function handleProxy(request: NextRequest, context: { params: Promise<{ pa
     });
 
     // Attach the secure API key stored only on the Next.js server environment variables
-    const apiKey = process.env.API_KEY || "veda-ai-local-dev-secret-key-39c81b2d";
+    const apiKey = process.env.API_KEY;
     headers.set("Authorization", `Bearer ${apiKey}`);
 
     let body: any = null;
