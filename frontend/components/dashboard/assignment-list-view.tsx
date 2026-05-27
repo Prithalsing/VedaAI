@@ -170,7 +170,7 @@ export function AssignmentListView({
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-24 right-6 flex justify-end lg:inset-x-0 lg:bottom-4 lg:justify-center">
+      <div className="pointer-events-none absolute bottom-24 right-6 z-30 flex justify-end lg:inset-x-0 lg:bottom-4 lg:justify-center">
         <div className="pointer-events-auto">
           <CreateAssignmentButton compact onClick={onCreateAssignment} />
         </div>
