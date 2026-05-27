@@ -195,29 +195,6 @@ Expected:
 - frontend receives real-time status updates
 - output page becomes available
 
-### 2. Redis / Queue Verification
-
-If Redis is running in Docker:
-
-```bash
-docker exec -it <redis-container-name> redis-cli
-```
-
-Then:
-
-```redis
-PING
-KEYS bull:*
-XRANGE bull:assessment-generation:events - + COUNT 20
-```
-
-This confirms BullMQ events such as:
-
-- `added`
-- `waiting`
-- `active`
-- `completed`
-
 ### 3. AI Test
 
 To test real Gemini generation:
@@ -246,17 +223,3 @@ Use it to verify:
 - generated PDFs are deleted when the related assignment is deleted
 - frontend and backend builds currently pass
 
-## Current Gaps / Next Work
-
-- improve real Gemini prompt quality and output consistency
-- improve PDF formatting to more closely match production exam layouts
-- add better queue observability or admin dashboard if needed
-- add automated tests where required
-
-## Build Status
-
-Verified successfully:
-
-- `npm --prefix backend run build`
-- `npm --prefix frontend run build`
-- `npm run build`
