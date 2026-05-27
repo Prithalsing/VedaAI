@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 
-const API_KEY = process.env.API_KEY || "veda-ai-secure-secret-token-2024";
+const API_KEY = process.env.API_KEY;
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+  if (!API_KEY) {
+    res.status(500).json({ success: false, message: "API key is not configured on the server" });
+    return;
+  }
+
   const authHeader = req.headers.authorization;
   const apiKeyHeader = req.headers["x-api-key"];
 

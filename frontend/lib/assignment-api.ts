@@ -4,7 +4,7 @@ import {
   GeneratedPaper,
 } from "./assignment-types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const API_BASE_URL = "/api/proxy";
 const SERVER_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
 type AssignmentsResponse = {
@@ -24,7 +24,6 @@ type MessageResponse = {
 
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
-  headers.set("Authorization", "Bearer veda-ai-secure-secret-token-2024");
 
   const response = await fetch(`${API_BASE_URL}${input}`, {
     ...init,
